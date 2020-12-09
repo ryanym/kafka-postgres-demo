@@ -1,0 +1,16 @@
+kafka:
+  brokers: 127.0.0.1:9092
+  topic: testtopic
+  message_key: message
+#  offset_reset: earliest
+  offset_reset: latest
+  group_id: testgroup
+
+postgres:
+  host: 127.0.0.1
+  port: 5432
+  database: testdb
+  user: testuser
+  password: testpass
+  table: testtable
+  column: message

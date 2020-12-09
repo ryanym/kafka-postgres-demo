@@ -1,41 +1,65 @@
-import time
 import json
+import argparse
+from utils import *
 from kafka import KafkaConsumer
-from db_utils import *
 
+def receive_message(consumer, kafka_message_key):
 
-KAFKA_BROKER = '127.0.0.1:9092'
-KAFKA_TOPIC = 'testtopic'
-POSTGRES_HOST = '127.0.0.1'
-POSTGRES_PORT = 5432
-DATABASE_NAME = 'testdb'
-DATABASE_USER = 'testuser'
-DATABASE_PASSWD = 'testpass'
-TABLE_NAME = 'testtable'
-COLUMN_NAME = 'message'
+    received_message = []
+    raw_data = consumer.poll(1000)
+    for partition, records in raw_data.items():
+        for record in records:
+            print(record)
+            msg = record.value[kafka_message_key]
+            print(f'received message {msg}')
+            received_message.append(msg)
+    print('finished receiving messages')
+    return received_message
 
+def store_messages(received_message, conn, table_name, column_name):
+    if len(received_message) == 0:
+        print("No received message found")
+        return -1
+
+    for message in received_message:
+        insert_message(conn, table_name, column_name, message)
+        print(f'stored message {message} to table {table_name}')
+    return 0
 
 def main():
-    conn = create_connection(POSTGRES_HOST,
-                             POSTGRES_PORT,
-                             DATABASE_NAME,
-                             DATABASE_USER,
-                             DATABASE_PASSWD)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', action='store', required=True,
+                        default='producer_config.yaml',
+                        help='kafka consumer config file')
+    args = parser.parse_args()
+
+    config = parse_config(args.config)
+
+    conn = create_connection(config['postgres']['host'],
+                             config['postgres']['port'],
+                             config['postgres']['database'],
+                             config['postgres']['user'],
+                             config['postgres']['password'])
     if conn is None:
         raise Exception("Cannot create database connection")
 
-    create_table_if_not_exists(conn, TABLE_NAME, COLUMN_NAME)
+    table_name = config['postgres']['table']
+    column_name = config['postgres']['column']
+    create_table_if_not_exists(conn, table_name, column_name)
 
-    consumer = KafkaConsumer(KAFKA_TOPIC,
-                             bootstrap_servers=KAFKA_BROKER,
-                             auto_offset_reset='earliest',
-                             value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-    for record in consumer:
-        msg = record.value['message']
-        print(f'received message {msg}')
-        insert_message(conn, TABLE_NAME, COLUMN_NAME, msg)
+    consumer = KafkaConsumer(config['kafka']['topic'],
+                             bootstrap_servers=config['kafka']['brokers'],
+                             auto_offset_reset=config['kafka']['offset_reset'],
+                             value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+                             group_id=config['kafka']['group_id'],
+                             )
+    kafka_message_key = config['kafka']['message_key']
+
+    received_message = receive_message(consumer, kafka_message_key)
+    ret = store_messages(received_message, conn, table_name, column_name)
 
     conn.close()
+    consumer.close()
 
 
 if __name__ == '__main__':

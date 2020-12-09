@@ -1,5 +1,5 @@
 import psycopg2
-
+import yaml
 
 def create_connection(host, port, database, username, password):
 
@@ -35,4 +35,7 @@ def insert_message(conn, table_name, column_name, message):
     conn.commit()
     cur.close()
 
-
+def parse_config(config_file):
+    with open(config_file, 'r') as stream:
+        config = yaml.safe_load(stream)
+        return config
