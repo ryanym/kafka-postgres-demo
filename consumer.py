@@ -3,6 +3,7 @@ import argparse
 from utils import *
 from kafka import KafkaConsumer
 
+
 def receive_message(consumer, kafka_message_key):
 
     received_message = []
@@ -13,8 +14,10 @@ def receive_message(consumer, kafka_message_key):
             msg = record.value[kafka_message_key]
             print(f'received message {msg}')
             received_message.append(msg)
+    consumer.commit()
     print('finished receiving messages')
     return received_message
+
 
 def store_messages(received_message, conn, table_name, column_name):
     if len(received_message) == 0:
@@ -25,6 +28,7 @@ def store_messages(received_message, conn, table_name, column_name):
         insert_message(conn, table_name, column_name, message)
         print(f'stored message {message} to table {table_name}')
     return 0
+
 
 def main():
     parser = argparse.ArgumentParser()
