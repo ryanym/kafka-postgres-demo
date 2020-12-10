@@ -1,5 +1,6 @@
 import json
 import argparse
+import os
 from utils import *
 from kafka import KafkaProducer
 from kafka.errors import KafkaTimeoutError
@@ -15,6 +16,16 @@ def send_message(producer, topic, kafka_message_key, message):
         print(e)
     return record
 
+def setup_producer(config):
+    pwd = os.path.dirname(os.path.realpath(__file__))
+    producer = KafkaProducer(bootstrap_servers=config['kafka']['brokers'],
+                             security_protocol='SSL',
+                             value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                             ssl_cafile=pwd + '/' + config['kafka']['ssl_cafile'],
+                             ssl_certfile=pwd + '/' + config['kafka']['ssl_certfile'],
+                             ssl_keyfile=pwd + '/' + config['kafka']['ssl_keyfile'],
+                             )
+    return producer
 
 def main():
     parser = argparse.ArgumentParser()
@@ -27,11 +38,10 @@ def main():
     args = parser.parse_args()
 
     config = parse_config(args.config)
-    producer = KafkaProducer(bootstrap_servers=config['kafka']['brokers'],
-                             value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+
+    producer = setup_producer(config)
     topic = config['kafka']['topic']
     kafka_message_key = config['kafka']['message_key']
-
     message = args.message
 
     if message:

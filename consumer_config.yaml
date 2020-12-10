@@ -1,10 +1,14 @@
 kafka:
-  brokers: 127.0.0.1:9092
+#  brokers: 127.0.0.1:9092
+  brokers: kafka-365d19e0-ryan-0df0.aivencloud.com:11584
   topic: testtopic
   message_key: message
 #  offset_reset: earliest
   offset_reset: latest
   group_id: testgroup
+  ssl_cafile: ca.pem
+  ssl_certfile: service.cert
+  ssl_keyfile: service.key
 
 postgres:
   host: 127.0.0.1

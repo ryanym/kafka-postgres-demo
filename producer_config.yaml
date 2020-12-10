@@ -1,4 +1,8 @@
 kafka:
-  brokers: 127.0.0.1:9092
+#  brokers: 127.0.0.1:9092
+  brokers: kafka-365d19e0-ryan-0df0.aivencloud.com:11584
   topic: testtopic
   message_key: message
+  ssl_cafile: ca.pem
+  ssl_certfile: service.cert
+  ssl_keyfile: service.key

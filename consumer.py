@@ -1,5 +1,6 @@
 import json
 import argparse
+import os
 from utils import *
 from kafka import KafkaConsumer
 
@@ -7,7 +8,7 @@ from kafka import KafkaConsumer
 def receive_message(consumer, kafka_message_key):
 
     received_message = []
-    raw_data = consumer.poll(1000)
+    raw_data = consumer.poll(10000)
     for partition, records in raw_data.items():
         for record in records:
             print(record)
@@ -28,6 +29,22 @@ def store_messages(received_message, conn, table_name, column_name):
         insert_message(conn, table_name, column_name, message)
         print(f'stored message {message} to table {table_name}')
     return 0
+
+
+def setup_consumer(config):
+    pwd = os.path.dirname(os.path.realpath(__file__))
+
+    consumer = KafkaConsumer(config['kafka']['topic'],
+                             bootstrap_servers=config['kafka']['brokers'],
+                             auto_offset_reset=config['kafka']['offset_reset'],
+                             value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+                             group_id=config['kafka']['group_id'],
+                             ssl_cafile=pwd + '/' + config['kafka']['ssl_cafile'],
+                             ssl_certfile=pwd + '/' + config['kafka']['ssl_certfile'],
+                             ssl_keyfile=pwd + '/' + config['kafka']['ssl_keyfile'],
+                             security_protocol='SSL',
+                             )
+    return consumer
 
 
 def main():
@@ -51,12 +68,7 @@ def main():
     column_name = config['postgres']['column']
     create_table_if_not_exists(conn, table_name, column_name)
 
-    consumer = KafkaConsumer(config['kafka']['topic'],
-                             bootstrap_servers=config['kafka']['brokers'],
-                             auto_offset_reset=config['kafka']['offset_reset'],
-                             value_deserializer=lambda x: json.loads(x.decode('utf-8')),
-                             group_id=config['kafka']['group_id'],
-                             )
+    consumer = setup_consumer(config)
     kafka_message_key = config['kafka']['message_key']
 
     received_message = receive_message(consumer, kafka_message_key)
