@@ -9,8 +9,8 @@ from kafka import KafkaProducer, KafkaConsumer
 
 class TestConsumerPostgres(unittest.TestCase):
     def setUp(self):
-        self.producer_config = parse_config('../producer_config.yaml')
-        self.consumer_config = parse_config('../consumer_config.yaml')
+        self.producer_config = parse_config('producer_config.yaml')
+        self.consumer_config = parse_config('consumer_config.yaml')
 
         self.producer = setup_producer(self.producer_config)
         self.consumer = setup_consumer(self.consumer_config)

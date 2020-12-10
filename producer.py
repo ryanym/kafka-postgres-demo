@@ -7,6 +7,14 @@ from kafka.errors import KafkaTimeoutError
 
 
 def send_message(producer, topic, kafka_message_key, message):
+    """
+    send message to kafka topic in key-value format
+    :param producer(KafkaProducer): kafka producer to publish the message
+    :param topic(str): kafka topic to publish the message to
+    :param kafka_message_key(str): key of the message
+    :param message(str): message to send
+    :return: FutureRecordMetadata this is used to validate if message has been sent
+    """
     data = {kafka_message_key: message}
     record = None
     try:
@@ -16,7 +24,13 @@ def send_message(producer, topic, kafka_message_key, message):
         print(e)
     return record
 
+
 def setup_producer(config):
+    """
+    set up kafka producer with config
+    :param config(dict): a python dict of producer configuration options. See example producer configuration.
+    :return: KafkaProducer
+    """
     pwd = os.path.dirname(os.path.realpath(__file__))
     producer = KafkaProducer(bootstrap_servers=config['kafka']['brokers'],
                              security_protocol='SSL',
@@ -27,7 +41,12 @@ def setup_producer(config):
                              )
     return producer
 
+
 def main():
+    """
+    Parse command line arguments and publish the message from cli with kafka producer
+    :return: return 0 if successful, negative numbers otherwise
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', action='store', required=True,
                         default='producer_config.yaml',
@@ -39,11 +58,13 @@ def main():
 
     config = parse_config(args.config)
 
+    # setup producer and related info
     producer = setup_producer(config)
     topic = config['kafka']['topic']
     kafka_message_key = config['kafka']['message_key']
-    message = args.message
 
+    # publish messages
+    message = args.message
     if message:
         ret = send_message(producer, topic, kafka_message_key, message)
         if ret is None:
