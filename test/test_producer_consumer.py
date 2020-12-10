@@ -41,3 +41,7 @@ class TestProducerConsumer(unittest.TestCase):
 
         received_message_str = ''.join(received_message)
         self.assertEqual(string.ascii_lowercase, received_message_str)
+
+    def tearDown(self):
+        # consume all messages left on the queue
+        received_message = receive_message(self.consumer, self.consumer_config['kafka']['message_key'])

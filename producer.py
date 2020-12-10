@@ -11,7 +11,7 @@ def send_message(producer, topic, kafka_message_key, message):
     record = None
     try:
         record = producer.send(topic, data)
-        print(f'Sent message: {data} to topic: {topic}')
+        print(f'Sent message: {data} to topic: {topic}, record: {record}')
     except KafkaTimeoutError as e:
         print(e)
     return record

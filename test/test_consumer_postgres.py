@@ -1,8 +1,8 @@
 import unittest
 import json
 import string
-from producer import send_message
-from consumer import receive_message, store_messages
+from producer import send_message, setup_producer
+from consumer import receive_message, store_messages, setup_consumer
 from utils import *
 from kafka import KafkaProducer, KafkaConsumer
 
@@ -12,14 +12,9 @@ class TestConsumerPostgres(unittest.TestCase):
         self.producer_config = parse_config('../producer_config.yaml')
         self.consumer_config = parse_config('../consumer_config.yaml')
 
-        self.producer = KafkaProducer(bootstrap_servers=self.producer_config['kafka']['brokers'],
-                                      value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+        self.producer = setup_producer(self.producer_config)
+        self.consumer = setup_consumer(self.consumer_config)
 
-        self.consumer = KafkaConsumer(self.consumer_config['kafka']['topic'],
-                                      bootstrap_servers=self.consumer_config['kafka']['brokers'],
-                                      auto_offset_reset=self.consumer_config['kafka']['offset_reset'],
-                                      value_deserializer=lambda x: json.loads(x.decode('utf-8')),
-                                      group_id=self.consumer_config['kafka']['group_id'])
 
         self.conn = create_connection(self.consumer_config['postgres']['host'],
                                       self.consumer_config['postgres']['port'],
@@ -56,3 +51,6 @@ class TestConsumerPostgres(unittest.TestCase):
 
         self.assertEqual(string.ascii_lowercase, stored_message_str)
 
+    def tearDown(self):
+        # consume all messages left on the queue
+        received_message = receive_message(self.consumer, self.consumer_config['kafka']['message_key'])

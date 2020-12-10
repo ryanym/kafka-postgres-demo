@@ -1,9 +1,7 @@
 kafka:
-#  brokers: 127.0.0.1:9092
   brokers: kafka-365d19e0-ryan-0df0.aivencloud.com:11584
   topic: testtopic
   message_key: message
-#  offset_reset: earliest
   offset_reset: latest
   group_id: testgroup
   ssl_cafile: ca.pem
@@ -11,10 +9,10 @@ kafka:
   ssl_keyfile: service.key
 
 postgres:
-  host: 127.0.0.1
-  port: 5432
+  host: pg-d5d6de4-ryan-0df0.aivencloud.com
+  port: 11582
   database: testdb
   user: testuser
-  password: testpass
+  password: fzo89j7ucqdyb72q
   table: testtable
   column: message
