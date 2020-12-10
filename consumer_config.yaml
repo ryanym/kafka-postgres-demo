@@ -9,10 +9,10 @@ kafka:
   ssl_keyfile: service.key
 
 postgres:
-  host: pg-d5d6de4-ryan-0df0.aivencloud.com
+  host: <hidden>.aivencloud.com
   port: 11582
   database: testdb
   user: testuser
-  password: fzo89j7ucqdyb72q
+  password: <hidden>
   table: testtable
   column: message
